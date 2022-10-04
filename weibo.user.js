@@ -1,7 +1,7 @@
-﻿// ==UserScript==
+// ==UserScript==
 // @name         微博图片下载脚本
 // @homepage     https://github.com/mdstm/weibo
-// @version      4.3
+// @version      4.4
 // @description  下载旧版微博网页版的图片和视频
 // @author       mdstm
 // @match        https://weibo.com/*
@@ -27,13 +27,9 @@
    * @returns {string}      下载名称
    */
   function setName(info, idx, ext) {
-    // let user = info.user.idstr;
-    let time = new Date(info.created_at).toISOString();
-    time = time.substring(2, 19).replace('T', '`').replaceAll(':', '');
-    let mid = info.mid;
-    idx = (idx > 9 ? '' : '0') + idx;
-    // return user + '`' + time + '`' + mid + '`' + idx + '.' + ext;
-    return time + '`' + mid + '`' + idx + '.' + ext;
+    let t = new Date(info.created_at);
+    t.setTime(t.getTime() - t.getTimezoneOffset() * 60000 + idx * 1000);
+    return t.toISOString().substring(2, 19).replace(/[-T:]/g, '') + '.' + ext;
   }
 
   /**
