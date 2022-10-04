@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         微博图片下载脚本
 // @homepage     https://github.com/mdstm/weibo
-// @version      4.4
+// @version      5.0
 // @description  下载旧版微博网页版的图片和视频
 // @author       mdstm
 // @match        https://weibo.com/*
@@ -21,88 +21,84 @@
 
   /**
    * 设置下载名称
-   * @param   {object} info 微博信息
-   * @param   {number} idx  序号
-   * @param   {string} ext  扩展名，不带点
-   * @returns {string}      下载名称
    */
   function setName(info, idx, ext) {
     let t = new Date(info.created_at);
     t.setTime(t.getTime() - t.getTimezoneOffset() * 60000 + idx * 1000);
-    return t.toISOString().substring(2, 19).replace(/[-T:]/g, '') + '.' + ext;
+    t = t.toISOString().substring(2, 19);
+    return t.replace(/[-:]/g, '').replace('T', '_') + '.' + ext;
   }
 
   /**
    * 下载
+   * @param {string} url  链接
+   * @param {object} info 微博信息
+   * @param {number} idx  序号
+   * @param {string} ext  扩展名，不带点
    */
-  function download(url, name) {
+  function download(url, info, idx, ext) {
+    let name = setName(info, idx, ext);
     GM_download({
       url: url,
       name: name,
-      onerror: function() { download(url, name); }
+      onerror: function() { download(url, info, idx, ext); }
     });
-  }
-
-  /**
-   * 下载视频
-   */
-  function downVidio(info) {
-    let page_info = info.page_info;
-
-    if (page_info == null) {
-      console.log('未找到视频信息');
-      return;
-    }
-    console.log('找到视频信息，开始下载视频');
-
-    let media_info = page_info.media_info;
-    let url;
-
-    if (media_info == null) {
-      try {
-        url = page_info.slide_cover.playback_list[0].play_info.url.toString();
-        download(url, setName(info, 0, 'mp4')); // 下载微博故事
-      } catch (e) {
-        console.error('获取微博故事链接失败');
-      }
-    } else {
-      try {
-        url = media_info.playback_list[0].play_info.url.toString();
-        download(url, setName(info, 0, 'mp4')); // 下载正常视频
-      } catch (e) {
-        console.log('获取最高品质视频链接失败');
-        if ((url = media_info.mp4_720p_mp4) || (url = media_info.mp4_hd_url)) {
-          download(url, setName(info, 0, 'mp4')); // 下载低清晰度视频
-        } else {
-          console.error('获取微博视频链接失败');
-        }
-      }
-    }
   }
 
   /**
    * 下载图片和动图
    */
   function downPicture(info) {
-    let pic_infos = info.pic_infos;
+    let url, idx = 0, ext;
 
-    if (pic_infos == null) {
-      console.log('未找到图片信息');
-      downVidio(info);
+    if (info.pic_infos) { // 普通图片
+      console.log('找到普通图片，开始下载图片');
+      for (let pic of Object.values(info.pic_infos)) {
+        url = pic.largest.url;
+        ext = url.match(/\w+$/)[0];
+        download(url, info, idx++, ext); // 下载图片
+        if (ext != 'gif' && pic.video) {
+          download(pic.video, info, idx++, 'mp4'); // 下载 LIVE
+        }
+      }
       return;
     }
-    console.log('找到图片信息，开始下载图片');
 
-    let idx = 0;
-    for (let pic of Object.values(pic_infos)) {
-      let url;
-      if ((url = pic.largest) && (url = url.url)) {
-        download(url, setName(info, idx++, url.match(/\w+$/)[0])); // 下载图片
+    if (info.page_info) {
+      let page_info = info.page_info;
+
+      if (page_info.media_info) { // 普通视频
+        let media_info = page_info.media_info;
+        try {
+          url = media_info.playback_list[0].play_info.url;
+        } catch (e) {}
+        if (url
+        || (url = media_info.mp4_720p_mp4)
+        || (url = media_info.mp4_hd_url)
+        || (url = media_info.mp4_sd_url)) {
+          console.log('找到普通视频，开始下载视频');
+          download(url, info, 0, 'mp4'); // 下载视频
+          return;
+        }
       }
-      if (url = pic.video) {
-        download(url, setName(info, idx++, 'mp4')); // 下载 LIVE
-      }
+
+      try { // 微博故事
+        url = page_info.slide_cover.playback_list[0].play_info.url.toString();
+        console.log('找到微博故事，开始下载视频');
+        download(url, info, 0, 'mp4'); // 下载视频
+        return;
+      } catch (e) {}
+
+      try { // 明星动态
+        url = page_info.card_info.pic_url.toString();
+        ext = url.match(/\w+$/)[0];
+        console.log('找到明星动态，开始下载图片');
+        download(url, info, 0, ext); // 下载图片
+        return;
+      } catch (e) {}
     }
+
+    console.log('未找到图片或视频');
   }
 
   /**
