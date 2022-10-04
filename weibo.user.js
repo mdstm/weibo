@@ -46,7 +46,7 @@
   }
 
   /**
-   * 下载图片和动图
+   * 下载图片和视频
    */
   function downPicture(info) {
     let url, idx = 0, ext;
