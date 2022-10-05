@@ -21,6 +21,10 @@
 
   /**
    * 设置下载名称
+   * @param  {object} info 微博信息
+   * @param  {number} idx  序号
+   * @param  {string} ext  扩展名，不带点
+   * @return {string}      下载名称
    */
   function setName(info, idx, ext) {
     let t = new Date(info.created_at);
@@ -32,16 +36,13 @@
   /**
    * 下载
    * @param {string} url  链接
-   * @param {object} info 微博信息
-   * @param {number} idx  序号
-   * @param {string} ext  扩展名，不带点
+   * @param {string} name 下载名称
    */
-  function download(url, info, idx, ext) {
-    let name = setName(info, idx, ext);
+  function download(url, name) {
     GM_download({
       url: url,
       name: name,
-      onerror: function() { download(url, info, idx, ext); }
+      onerror: function() { download(url, name); }
     });
   }
 
@@ -56,9 +57,9 @@
       for (let pic of Object.values(info.pic_infos)) {
         url = pic.largest.url;
         ext = url.match(/\w+$/)[0];
-        download(url, info, idx++, ext); // 下载图片
+        download(url, setName(info, idx++, ext)); // 下载图片
         if (ext != 'gif' && pic.video) {
-          download(pic.video, info, idx++, 'mp4'); // 下载 LIVE
+          download(pic.video, setName(info, idx++, 'mp4')); // 下载 LIVE
         }
       }
       return;
@@ -77,7 +78,7 @@
         || (url = media_info.mp4_hd_url)
         || (url = media_info.mp4_sd_url)) {
           console.log('找到普通视频，开始下载视频');
-          download(url, info, 0, 'mp4'); // 下载视频
+          download(url, setName(info, 0, 'mp4')); // 下载视频
           return;
         }
       }
@@ -85,7 +86,7 @@
       try { // 微博故事
         url = page_info.slide_cover.playback_list[0].play_info.url.toString();
         console.log('找到微博故事，开始下载视频');
-        download(url, info, 0, 'mp4'); // 下载视频
+        download(url, setName(info, 0, 'mp4')); // 下载视频
         return;
       } catch (e) {}
 
@@ -93,7 +94,7 @@
         url = page_info.card_info.pic_url.toString();
         ext = url.match(/\w+$/)[0];
         console.log('找到明星动态，开始下载图片');
-        download(url, info, 0, ext); // 下载图片
+        download(url, setName(info, 0, ext)); // 下载图片
         return;
       } catch (e) {}
     }
