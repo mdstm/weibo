@@ -145,8 +145,8 @@
         return false;
       }
 
-      if (box.querySelector('.WB_pic:not(.li_birthday,.li_oly)') // 存在图片
-        || box.querySelector('.WB_video')) { // 存在视频
+      if (box.querySelector('.WB_pic') // 存在图片
+      || box.querySelector('.WB_video')) { // 存在视频
         return true;
       }
       return false;
