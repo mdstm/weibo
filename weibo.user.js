@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         微博图片下载脚本
 // @homepage     https://github.com/mdstm/weibo
-// @version      5.0
+// @version      5.1
 // @description  下载旧版微博网页版的图片和视频
 // @author       mdstm
 // @match        https://weibo.com/*
@@ -30,7 +30,7 @@
     let t = new Date(info.created_at);
     t.setTime(t.getTime() - t.getTimezoneOffset() * 60000 + idx * 1000);
     t = t.toISOString().substring(2, 19);
-    return t.replace(/[-:]/g, '').replace('T', '_') + '.' + ext;
+    return t.replace(/[-:]/g, '').replace('T', '`') + '.' + ext;
   }
 
   /**
