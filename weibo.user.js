@@ -30,7 +30,7 @@
     let t = new Date(info.created_at);
     t.setTime(t.getTime() - t.getTimezoneOffset() * 60000 + idx * 1000);
     t = t.toISOString().substring(2, 19);
-    return t.replace(/[-:]/g, '').replace('T', '`') + '.' + ext;
+    return t.replace(/[-:]/g, '').replace('T', '_') + '.' + ext;
   }
 
   /**
