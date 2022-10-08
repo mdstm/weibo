@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         微博图片下载脚本
 // @homepage     https://github.com/mdstm/weibo
-// @version      5.1
+// @version      5.2
 // @description  下载旧版微博网页版的图片和视频
 // @author       mdstm
 // @match        https://weibo.com/*
@@ -42,7 +42,8 @@
     GM_download({
       url: url,
       name: name,
-      onerror: function() { download(url, name); }
+      onerror: function() { console.error('下载 ' + name + ' 失败\n' + url); },
+      ontimeout: function() { download(url, name); }
     });
   }
 
