@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         微博图片下载脚本
 // @homepage     https://github.com/mdstm/weibo
-// @version      5.2
+// @version      6.0
 // @description  下载旧版微博网页版的图片和视频
 // @author       mdstm
 // @match        https://weibo.com/*
@@ -42,6 +42,7 @@
     GM_download({
       url: url,
       name: name,
+      headers: [{name: 'referer', value: 'https://weibo.com/'}],
       onerror: function() { console.error('下载 ' + name + ' 失败\n' + url); },
       ontimeout: function() { download(url, name); }
     });
@@ -129,52 +130,55 @@
     });
   }
 
-  /**
-   * 判断节点所在微博是否有图片或视频
-   */
-  function isGood(a) {
-    try {
-      let box = a.parentNode.parentNode;
+  // /**
+  //  * 判断节点所在微博是否有图片或视频
+  //  */
+  // function isGood(a) {
+  //   try {
+  //     let box = a.parentNode.parentNode;
 
-      if (!a.href.match(/\d+\/\w+/)) { // 微博链接不正确
-        return false;
-      }
+  //     if (!a.href.match(/\d+\/\w+/)) { // 微博链接不正确
+  //       return false;
+  //     }
 
-      if (box.classList.contains('WB_func')) { // 是被转发微博
-        box = box.parentNode;
-      } else if (box.querySelector('.WB_feed_expand')) { // 是转发微博
-        return false;
-      }
+  //     if (box.classList.contains('WB_func')) { // 是被转发微博
+  //       box = box.parentNode;
+  //     } else if (box.querySelector('.WB_feed_expand')) { // 是转发微博
+  //       return false;
+  //     }
 
-      if (box.querySelector('.WB_pic') // 存在图片
-      || box.querySelector('.WB_video')) { // 存在视频
-        return true;
-      }
-      return false;
-    } catch (e) {
-      return false;
-    }
-  }
+  //     if (box.querySelector('.WB_pic') // 存在图片
+  //     || box.querySelector('.WB_video')) { // 存在视频
+  //       return true;
+  //     }
+  //     return false;
+  //   } catch (e) {
+  //     return false;
+  //   }
+  // }
 
   /**
    * 初始化，给微博卡片增加按钮
    */
   function init() {
     let aList = document.querySelectorAll( // 列出未被检测的节点
-      '.WB_from>a[node-type="feed_list_item_date"]:not(.mdstm)'
+      // '.WB_from>a[node-type="feed_list_item_date"]:not(.mdstm)'
+      'a.head-info_time_6sFQg:nth-child(1):not(.mdstm)'
     );
 
     for (let a of aList) {
       a.className += ' mdstm'; // 添加已检测标记
-      if (!isGood(a)) {
-        continue;
-      }
+      // if (!isGood(a)) {
+      //   continue;
+      // }
       let b = document.createElement('a'); // 创建下载按钮
-      b.className = 'S_txt2';
+      b.className = 'head-info_time_6sFQg';
+      b.style.cursor = 'pointer';
       b.innerHTML = '下载';
       b.onclick = click;
 
-      a.parentNode.appendChild(b);
+      // a.parentNode.appendChild(b);
+      a.parentNode.insertBefore(b, a.nextSibling);
     }
 
     let n = aList.length;
