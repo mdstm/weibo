@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         微博图片下载脚本
 // @homepage     https://github.com/mdstm/weibo
-// @version      6.0
+// @version      6.1
 // @description  下载旧版微博网页版的图片和视频
 // @author       mdstm
 // @match        https://weibo.com/*
@@ -58,6 +58,7 @@
       console.log('找到普通图片，开始下载图片');
       for (let pic of Object.values(info.pic_infos)) {
         url = pic.largest.url;
+        url = url.replace(/\/wx[123]\./, '/wx4.');
         ext = url.match(/\w+$/)[0];
         download(url, setName(info, idx++, ext)); // 下载图片
         if (ext != 'gif' && pic.video) {
