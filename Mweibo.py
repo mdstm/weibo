@@ -40,7 +40,7 @@ def download(client: httpx.Client, url: str, name: str):
 
 def downloadHard(client: httpx.Client, url: str, name: str):
     "努力下载, 多次重试之后再抛异常"
-    for _ in range(3):
+    for _ in range(5):
         try:
             download(client, url, name)
             break
@@ -147,7 +147,7 @@ def main():
 
         if argv[1] == '-f' and len(argv) > 2: # 读取文件中的微博链接
             with open(argv[2], 'r') as f:
-                for wb_url in f.readlines():
+                for wb_url in f.read().split():
                     print(wb_url)
                     getMedia(client, wb_url)
                     print()
