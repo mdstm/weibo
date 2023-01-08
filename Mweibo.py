@@ -1,5 +1,5 @@
-import rich.progress
 import httpx
+from tqdm import tqdm
 
 import time
 import re
@@ -23,19 +23,17 @@ def download(client: httpx.Client, url: str, name: str):
         res.raise_for_status()
         total = int(res.headers['content-length'])
 
-        with rich.progress.Progress(
-            rich.progress.TextColumn(name),
-            rich.progress.TaskProgressColumn(),
-            rich.progress.BarColumn(),
-            rich.progress.DownloadColumn(binary_units=True),
-            rich.progress.TransferSpeedColumn(),
-            rich.progress.TextColumn('eta'),
-            rich.progress.TimeRemainingColumn()
-        ) as progress, open(name, 'wb') as f:
-            task = progress.add_task(name, total=total)
+        with tqdm(
+            desc=name,
+            total=total,
+            ncols=100,
+            unit='iB',
+            unit_scale=True,
+            unit_divisor=1024
+        ) as bar, open(name, 'wb') as f:
             for chunk in res.iter_bytes(chunk_size=1048576):
                 size = f.write(chunk)
-                progress.update(task, advance=size)
+                bar.update(size)
 
 
 def downloadHard(client: httpx.Client, url: str, name: str):
